@@ -1,5 +1,5 @@
 """
-loader.py - Load Tiingo CSV files to MySQL
+loader.py - Load Yahoo Finance CSV files to MySQL
 """
 import os
 import glob
@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 class CSVLoader:
     def __init__(
         self,
-        csv_dir='raw',
-        processed_dir='processed',
-        failed_dir='failed',
+        csv_dir='data/raw',
+        processed_dir='data/processed',
+        failed_dir='data/failed',
     ):
         self.csv_dir = csv_dir
         self.processed_dir = processed_dir
@@ -274,9 +274,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Load FMP CSV files into remote MySQL")
-    parser.add_argument("--csv-dir", default="raw", help="Directory with CSV files")
-    parser.add_argument("--processed-dir", default="processed", help="Processed output directory")
-    parser.add_argument("--failed-dir", default="failed", help="Failed output directory")
+    parser.add_argument("--csv-dir", default="data/raw", help="Directory with CSV files")
+    parser.add_argument("--processed-dir", default="data/processed", help="Processed output directory")
+    parser.add_argument("--failed-dir", default="data/failed", help="Failed output directory")
     parser.add_argument("--workers", type=int, default=2, help="Number of worker threads")
     args = parser.parse_args()
 

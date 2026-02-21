@@ -37,12 +37,20 @@ def enqueue_file(queue: Queue, file_path: Path) -> None:
     if not file_path.exists():
         return
 
-    queue.enqueue(
-        process_csv_job,
-        str(file_path),
-        job_timeout=1800,
-    )
-    logger.info("Enqueued %s", file_path)
+    stat = file_path.stat()
+    job_id = f"ingest:{file_path.resolve()}:{stat.st_mtime_ns}:{stat.st_size}"
+
+    try:
+        queue.enqueue(
+            process_csv_job,
+            str(file_path),
+            job_timeout=1800,
+            job_id=job_id,
+            result_ttl=86400,
+        )
+        logger.info("Enqueued %s", file_path)
+    except Exception:
+        logger.debug("Skipped duplicate enqueue for %s", file_path)
 
 
 class CSVEventHandler(FileSystemEventHandler):

@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 RAW_DIR = Path(os.getenv("PIPELINE_RAW_DIR", "data/raw")).resolve()
-PROCESSED_DIR = Path(os.getenv("PIPELINE_PROCESSED_DIR", "processed")).resolve()
-FAILED_DIR = Path(os.getenv("PIPELINE_FAILED_DIR", "failed")).resolve()
+PROCESSED_DIR = Path(os.getenv("PIPELINE_PROCESSED_DIR", "data/processed")).resolve()
+FAILED_DIR = Path(os.getenv("PIPELINE_FAILED_DIR", "data/failed")).resolve()
 
 logger.info(f"Pipeline configured for remote database: {db_manager.host}")
 logger.info(f"Monitoring directory: {RAW_DIR}")
@@ -28,8 +28,8 @@ def process_csv_job(file_path: str) -> bool:
     """Process a single CSV file and upload to remote database."""
     path = Path(file_path)
     if not path.exists():
-        logger.error("File not found: %s", file_path)
-        return False
+        logger.info("Skipping missing file (already moved/processed): %s", file_path)
+        return True
 
     processed_dir = PROCESSED_DIR
     failed_dir = FAILED_DIR
@@ -53,11 +53,18 @@ def process_csv_job(file_path: str) -> bool:
     else:
         logger.error(f"✗ Failed to upload {path.name} to remote database")
         _move_to_failed(path, failed_dir)
+
+        # If file was already moved to processed before failure was surfaced,
+        # move it to failed for consistent triage behavior.
+        processed_candidate = processed_dir / path.name
+        _move_to_failed(processed_candidate, failed_dir)
     
     return success
 
 
 def _move_to_failed(file_path: Path, failed_dir: Path) -> None:
+    if not file_path.exists():
+        return
     failed_dir.mkdir(parents=True, exist_ok=True)
     dest = failed_dir / file_path.name
     if dest.exists():

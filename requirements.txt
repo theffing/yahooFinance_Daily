@@ -9,3 +9,4 @@ aiofiles==23.2.1
 redis==5.0.1
 rq==1.15.1
 watchdog==4.0.0
+yfinance==1.2.0
